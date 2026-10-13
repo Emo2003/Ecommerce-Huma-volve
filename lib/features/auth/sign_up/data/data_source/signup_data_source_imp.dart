@@ -1,14 +1,17 @@
-import 'package:ecommerce_app_huma_volve/core/network_service/network_services.dart';
-import 'package:ecommerce_app_huma_volve/features/auth/sign_up/models/Signup_res_model.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/data_source/signup_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/models/Signup_res_model.dart';
 
-import '../../../../core/constant/api_end_point.dart';
+import '../../../../../core/constant/api_end_point.dart';
+import '../../../../../core/network_service/network_services.dart';
+import '../models/signup_req_model.dart';
 
-class SignupService {
-  NetworkServices networkServices;
+class SignupDataSourceImp implements SignupDataSource {
+  final NetworkServices networkServices;
 
-  SignupService({required this.networkServices});
+  SignupDataSourceImp(this.networkServices);
 
-  Future<SignupResModel> signup(SignupResModel signupReqModel) async {
+  @override
+  Future<SignupResModel> signup(SignupReqModel signupReqModel) async {
     final response = await networkServices.dio.post(
       ApiEndPoint.register,
       data: {

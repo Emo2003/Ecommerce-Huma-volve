@@ -1,22 +1,15 @@
-class SignupResModel {
-  num? id;
-  String? email;
-  String? password;
-  String? name;
-  String? role;
-  String? avatar;
-  String? creationAt;
-  String? updatedAt;
+import '../../domain/entities/signup_entity.dart';
 
+class SignupResModel extends SignupEntity {
   SignupResModel({
-    this.id,
-    this.email,
-    this.password,
-    this.name,
-    this.role,
-    this.avatar,
-    this.creationAt,
-    this.updatedAt,
+    super.id,
+    super.email,
+    super.password,
+    super.name,
+    super.role,
+    super.avatar,
+    super.creationAt,
+    super.updatedAt,
   });
 
   SignupResModel.fromJson(dynamic json) {

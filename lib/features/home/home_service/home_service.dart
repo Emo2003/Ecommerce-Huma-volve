@@ -10,7 +10,7 @@ class HomeService {
   HomeService({required this.networkServices});
 
   Future<List<CategoriesModel>> getCategories() async {
-    final response = await networkServices.dio.get("${ApiEndPoint.categories}");
+    final response = await networkServices.dio.get(ApiEndPoint.categories);
     final List jsonData = response.data;
     final List<CategoriesModel> categories = jsonData
         .map((e) => CategoriesModel.fromJson(e))

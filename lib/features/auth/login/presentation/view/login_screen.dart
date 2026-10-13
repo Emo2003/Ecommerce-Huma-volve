@@ -1,66 +1,69 @@
 import 'package:dio/dio.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/data/data_source/signup_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/auth/sign_up/domain/repository/signup_repo.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/network_service/network_services.dart';
-import '../../../../core/widgets/custom_text_field.dart';
-import '../../../../core/widgets/primary_button.dart';
-import '../../../../core/theme.dart';
-import '../../login/screens/login_screen.dart';
-import '../models/Signup_res_model.dart';
-import '../service/signup_service.dart';
+import '../../../../../core/network_service/network_services.dart';
+import '../../../../../core/theme.dart';
+import '../../../../../core/widgets/custom_text_field.dart';
+import '../../../../../core/widgets/primary_button.dart';
+import '../../../../main_navigation/screens/main_navigation_screen.dart';
+import '../../../sign_up/data/data_source/signup_data_source_imp.dart';
+import '../../../sign_up/data/repository/signup_repo_imp.dart';
+import '../../../sign_up/domain/use_cases/signup_use_case.dart';
+import '../../../sign_up/presentation/view/sign_up_screen.dart';
+import '../../../sign_up/presentation/view_model/signup_cubit.dart';
+import '../view_model/login_cubit.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController nameController;
   late final TextEditingController emailController;
   late final TextEditingController passwordController;
   bool isLoading = false;
+  late final SignupCubit signupCubit;
+  late final SignupDataSource signupDataSource;
   late final NetworkServices networkServices;
-  late final SignupService signupService;
+  late final SignupRepo signupRepo;
+  late final SignupUseCase signupUseCase;
 
   @override
   void initState() {
-    nameController = TextEditingController();
+    super.initState();
+
     emailController = TextEditingController();
     passwordController = TextEditingController();
-    networkServices = NetworkServices();
-    signupService = SignupService(networkServices: networkServices);
 
-    super.initState();
+    networkServices = NetworkServices();
+    signupDataSource = SignupDataSourceImp(networkServices);
+    signupRepo = SignupRepoImp(signupDataSource);
+    signupUseCase = SignupUseCase(signupRepo);
+    signupCubit = SignupCubit(signupUseCase);
   }
 
-  void signUp() async {
+  void login() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         isLoading = true;
       });
       try {
-        await signupService.signup(
-          SignupResModel(
-            name: nameController.text,
-            email: emailController.text,
-            password: passwordController.text,
-          ),
-        );
+        final loginService = context.read<LoginCubit>();
+        await loginService.login(emailController.text, passwordController.text);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
+            content: Text('Login successful!'),
             backgroundColor: Colors.green,
-            content: Text('Account created successfully!'),
           ),
         );
-        setState(() {
-          isLoading = false;
-        });
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
         );
       } on DioException catch (e) {
         setState(() {
@@ -68,9 +71,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              '${e.toString()} An error occurred. Please try again.',
-            ),
+            content: Text('Login failed: ${e.message}'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -79,7 +81,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -97,35 +98,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
-                Icon(Icons.person_add, size: 80, color: AppTheme.primary),
+                const SizedBox(height: 60),
+                Icon(Icons.shopping_bag, size: 80, color: AppTheme.primary),
                 const SizedBox(height: 32),
                 Text(
-                  'Create Account',
+                  'Welcome Back!',
                   style: Theme.of(context).textTheme.displayLarge
                       ?.copyWith(fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign up to get started',
+                  'Login to continue your shopping',
                   style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
-                CustomTextField(
-                  controller: nameController,
-                  hintText: 'Full Name',
-                  prefixIcon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 64),
                 CustomTextField(
                   controller: emailController,
                   hintText: 'Email Address',
@@ -157,27 +146,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
                 PrimaryButton(
                   isLoading: isLoading,
-                  text: 'Sign Up',
-                  onPressed: signUp,
+                  text: 'Login',
+                  onPressed: login,
                 ),
+
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account? '),
+                    const Text('Don\'t have an account? '),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (
-                              context,
-                              animation,
-                              secondaryAnimation,
-                            ) => const LoginScreen(),
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    BlocProvider(
+                                      create: (context) => signupCubit,
+                                      child: const SignUpScreen(),
+                                    ),
                             transitionsBuilder:
                                 (
                                   context,
@@ -194,7 +196,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         );
                       },
                       child: Text(
-                        'Login',
+                        'Sign Up',
                         style: TextStyle(
                           color: AppTheme.primary,
                           fontWeight: FontWeight.bold,
