@@ -1,11 +1,16 @@
-import 'package:ecommerce_app_huma_volve/features/home/home_manage/home_cubit.dart';
+import 'package:ecommerce_app_huma_volve/features/home/data/data_source/home_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/repository/home_repo.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/use_cases/categories_use_case.dart';
+import 'package:ecommerce_app_huma_volve/features/home/domain/use_cases/products_use_case.dart';
+import 'package:ecommerce_app_huma_volve/features/home/presentation/view_model/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/network_service/network_services.dart';
 import '../../../core/theme.dart';
-import '../../home/home_service/home_service.dart';
-import '../../home/screens/home_screen.dart';
+import '../../home/data/data_source/home_data_source_imp.dart';
+import '../../home/data/repository/home_repo_imp.dart';
+import '../../home/presentation/view/home_screen.dart';
 import '../../cart/screens/cart_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 
@@ -19,7 +24,10 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   late final NetworkServices networkServices;
-  late final HomeService homeService;
+  late final HomeDataSource homeDataSource;
+  late final HomeRepo homeRepo;
+  late final CategoriesUseCase categoriesUseCase;
+  late final ProductsUseCase productsUseCase;
   late final HomeCubit homeCubit;
 
   @override
@@ -27,9 +35,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     super.initState();
 
     networkServices = NetworkServices();
-    homeService = HomeService(networkServices: networkServices);
-    homeCubit = HomeCubit(homeService: homeService);
+    homeDataSource = HomeDataSourceImp(networkServices);
+    homeRepo = HomeRepoImp(homeDataSource);
+    categoriesUseCase = CategoriesUseCase(homeRepo);
+    productsUseCase = ProductsUseCase(homeRepo);
+    homeCubit = HomeCubit(categoriesUseCase, productsUseCase);
   }
+
   @override
   void dispose() {
     homeCubit.close();
