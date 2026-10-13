@@ -4,7 +4,7 @@ class LoginModel extends LoginEntity {
   LoginModel({super.accessToken, super.refreshToken});
 
   LoginModel.fromJson(Map<String, dynamic> json) {
-    accessToken = json['accessToken'];
-    refreshToken = json['refreshToken'];
+    accessToken = json['access_token'];
+    refreshToken = json['refresh_token'];
   }
 }

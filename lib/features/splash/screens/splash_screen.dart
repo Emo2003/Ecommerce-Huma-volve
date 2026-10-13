@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/network_service/network_services.dart';
+import '../../../core/storage_services/secure_storage.dart';
 import '../../../core/theme.dart';
 import '../../auth/login/data/data_source/login_data_source.dart';
 import '../../auth/login/data/data_source/login_data_source_imp.dart';
@@ -10,6 +11,7 @@ import '../../auth/login/data/repository/login_repo_imp.dart';
 import '../../auth/login/domain/use_cases/login_use_case.dart';
 import '../../auth/login/presentation/view/login_screen.dart';
 import '../../auth/login/presentation/view_model/login_cubit.dart';
+import '../../main_navigation/screens/main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -41,18 +43,31 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              BlocProvider.value(value: loginCubit, child: const LoginScreen()),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-        ),
+
+    final accessToken = await SecureStorage.getAccessToken();
+
+    if (!mounted) return;
+
+    final Widget nextScreen;
+
+    if (accessToken != null && accessToken.isNotEmpty) {
+      nextScreen = const MainNavigationScreen();
+    } else {
+      nextScreen = BlocProvider<LoginCubit>.value(
+        value: loginCubit,
+        child: const LoginScreen(),
       );
     }
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
   }
 
   @override
