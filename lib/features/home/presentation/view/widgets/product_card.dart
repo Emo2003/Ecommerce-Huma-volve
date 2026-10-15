@@ -53,10 +53,27 @@ class ProductCard extends StatelessWidget {
                         top: Radius.circular(24),
                       ),
                       child: Image.network(
-                        product.images!.first,
+                        product.images?.isNotEmpty == true
+                            ? product.images!.first
+                            : 'https://placehold.co/600x600/png?text=Product',
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Image.network(
+                            'https://placehold.co/600x600/png?text=Product',
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Center(
+                                child: Icon(
+                                  Icons.image_not_supported_outlined,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ),
                   ),

@@ -5,5 +5,9 @@ import '../models/Products_model.dart';
 abstract class HomeDataSource {
   Future<List<CategoriesModel>> getCategories();
 
-  Future<List<ProductsModel>> getProducts(num? categoryId);
+  Future<List<ProductsModel>> getProducts(
+    num? categoryId, {
+    required int limit,
+    required int offset,
+  });
 }

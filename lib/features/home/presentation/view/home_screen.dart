@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/dummy_data.dart';
 import '../../../../core/theme.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -18,13 +17,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedCategoryIndex = 0;
+  late final ScrollController scrollController;
 
   @override
   void initState() {
     super.initState();
-    context.read<HomeCubit>()
-      ..loadCategories()
-      ..loadProducts(1);
+    context.read<HomeCubit>().loadCategories();
+    scrollController = ScrollController();
+    scrollController.addListener(_addListener);
+  }
+
+  void _addListener() {
+    final pixel = scrollController.position.pixels;
+    final maxScrollExtent = scrollController.position.maxScrollExtent;
+    final trigger = 300;
+    if (pixel > maxScrollExtent - trigger) {
+      context.read<HomeCubit>().loadMoreProducts();
+    }
   }
 
   @override
@@ -33,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -220,6 +230,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
                 return const SliverToBoxAdapter(child: SizedBox.shrink());
+              },
+            ),
+            BlocBuilder<HomeCubit, HomeState>(
+              builder: (context, state) {
+                if (state is ProductsLoadingMoreState) {
+                  return const SliverToBoxAdapter(
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primaryVariant,
+                      ),
+                    ),
+                  );
+                }
+                return const SliverToBoxAdapter(child: SizedBox(height: 24,));
               },
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
