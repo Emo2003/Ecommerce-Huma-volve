@@ -21,9 +21,14 @@ class HomeDataSourceImp implements HomeDataSource {
   }
 
   @override
-  Future<List<ProductsModel>> getProducts(num? categoryId) async {
+  Future<List<ProductsModel>> getProducts(
+    num? categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
     final response = await networkServices.dio.get(
       "${ApiEndPoint.categories}/$categoryId/${ApiEndPoint.products}",
+      queryParameters: {"limit": limit, "offset": offset},
     );
     final List jsonData = response.data;
     final List<ProductsModel> products = jsonData

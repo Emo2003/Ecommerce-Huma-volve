@@ -9,7 +9,23 @@ class ProductsUseCase {
 
   ProductsUseCase(this.homeRepo);
 
-  Future<Either<Failure, List<ProductsEntity>>> call(num? categoryId) async {
-    return await homeRepo.getProducts(categoryId);
+  Future<Either<Failure, List<ProductsEntity>>> call(
+    num? categoryId, {
+    required int limit,
+    required int offset,
+  }) async {
+    final result = await homeRepo.getProducts(
+      categoryId,
+      limit: limit,
+      offset: offset,
+    );
+    return result.fold(
+      ifLeft: (Failure value) {
+        return Left(value);
+      },
+      ifRight: (List<ProductsEntity> value) {
+        return Right(value);
+      },
+    );
   }
 }
