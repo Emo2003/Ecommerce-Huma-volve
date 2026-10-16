@@ -1,13 +1,42 @@
+import 'package:ecommerce_app_huma_volve/features/details/data/data_source/product_data_source.dart';
+import 'package:ecommerce_app_huma_volve/features/details/domain/repository/product_repo.dart';
 import 'package:ecommerce_app_huma_volve/features/home/domain/entities/products_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../core/network_service/network_services.dart';
 import '../../../../../core/theme.dart';
-import '../../../../details/screens/product_details_screen.dart';
+import '../../../../details/data/data_source/product_data_source_imp.dart';
+import '../../../../details/data/repository/product_repo_imp.dart';
+import '../../../../details/domain/use_case/product_use_case.dart';
+import '../../../../details/presentation/view/product_details_screen.dart';
+import '../../../../details/presentation/view_model/product_cubit.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final ProductsEntity product;
 
   const ProductCard({super.key, required this.product});
+
+  @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  late final ProductDetailsCubit productDetailsCubit;
+  late final NetworkServices networkServices;
+  late final ProductDataSource productDataSource;
+  late final GetProductByIdUseCase getProductByIdUseCase;
+  late final ProductRepo productRepo;
+
+  @override
+  void initState() {
+    super.initState();
+    networkServices = NetworkServices();
+    productDataSource = ProductDataSourceImp(networkServices);
+    productRepo = ProductRepositoryImpl(productDataSource);
+    getProductByIdUseCase = GetProductByIdUseCase(productRepo);
+    productDetailsCubit = ProductDetailsCubit(getProductByIdUseCase);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +47,10 @@ class ProductCard extends StatelessWidget {
           PageRouteBuilder(
             transitionDuration: const Duration(milliseconds: 500),
             pageBuilder: (context, animation, secondaryAnimation) =>
-                ProductDetailsScreen(product: product),
+                BlocProvider(
+                  create: (context) => productDetailsCubit,
+                  child: ProductDetailsScreen(productId: widget.product.id),
+                ),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
                   return FadeTransition(opacity: animation, child: child);
@@ -47,14 +79,14 @@ class ProductCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Hero(
-                    tag: 'product-${product.id}',
+                    tag: 'product-${widget.product.id}',
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
                       child: Image.network(
-                        product.images?.isNotEmpty == true
-                            ? product.images!.first
+                        widget.product.images?.isNotEmpty == true
+                            ? widget.product.images!.first
                             : 'https://placehold.co/600x600/png?text=Product',
                         fit: BoxFit.cover,
                         width: double.infinity,
@@ -105,7 +137,7 @@ class ProductCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      product.title ?? '',
+                      widget.product.title ?? '',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -119,7 +151,7 @@ class ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${product.price?.toStringAsFixed(2)}',
+                          '\$${widget.product.price?.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: AppTheme.primary,
                             fontWeight: FontWeight.bold,
